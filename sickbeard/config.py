@@ -265,7 +265,7 @@ def check_setting_str(config, cfg_name, item_name, def_val, log=True):
             config[cfg_name][item_name] = helpers.encrypt(my_val, encryption_version)
 
     if log:
-        logger.log(item_name + " -> " + my_val, logger.DEBUG)
+        logger.log(item_name + " -> " + str(my_val), logger.DEBUG)
     else:
         logger.log(item_name + " -> ******", logger.DEBUG)
     return my_val
@@ -475,3 +475,4 @@ class ConfigMigrator():
                 new_newznab_data.append("|".join(cur_provider_data_list))
 
             sickbeard.NEWZNAB_DATA = "!!!".join(new_newznab_data)          
+            

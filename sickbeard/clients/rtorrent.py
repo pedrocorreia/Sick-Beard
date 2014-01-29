@@ -118,22 +118,22 @@ class rTorrentAPI(GenericClient):
 
         # if not name:
             # return False
-
+        #
         # if not self.auth:
             # return False
-
+        #
         # views = self.auth.get_views()
-
+        #
         # if name not in views:
             # self.auth.create_group(name)
 
         # group = self.auth.get_group(name)
 
         # ratio = int(float(sickbeard.TORRENT_RATIO) * 100)
-
+        #
         # try:
             # if ratio > 0:
-
+                #
                 # # Explicitly set all group options to ensure it is setup correctly
                 # group.set_upload('1M')
                 # group.set_min(ratio)
@@ -144,7 +144,7 @@ class rTorrentAPI(GenericClient):
                 # # Reset group action and disable it
                 # group.set_command()
                 # group.disable()
-
+        #
         # except:
             # return False
 

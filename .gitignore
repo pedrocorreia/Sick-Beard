@@ -33,6 +33,7 @@ tests/cache.db
 *.sw?
 Session.vim
 .ropeproject/*
+*.sublime*
 
 # OS generated files #
 ######################

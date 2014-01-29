@@ -950,7 +950,7 @@ class ConfigGeneral:
     def saveGeneral(self, log_dir=None, web_port=None, web_log=None, encryption_version=None, web_ipv6=None,
                     update_shows_on_start=None, launch_browser=None, web_username=None, use_api=None, api_key=None,
                     web_password=None, version_notify=None, enable_https=None, https_cert=None, https_key=None, sort_article=None,
-                    anon_redirect=None, git_path=None, calendar_unprotected=None, date_preset=None, time_preset=None):
+                    anon_redirect=None, git_path=None, calendar_unprotected=None):
 
         results = []
 
@@ -1009,13 +1009,6 @@ class ConfigGeneral:
         sickbeard.ENCRYPTION_VERSION = encryption_version
         sickbeard.WEB_USERNAME = web_username
         sickbeard.WEB_PASSWORD = web_password
-
-        if date_preset:
-            sickbeard.DATE_PRESET = date_preset
-        
-        if time_preset:
-            sickbeard.TIME_PRESET_W_SECONDS = time_preset
-            sickbeard.TIME_PRESET = sickbeard.TIME_PRESET_W_SECONDS.replace(u":%S",u"")
 
         if not config.change_LOG_DIR(log_dir, web_log):
             results += ["Unable to create directory " + os.path.normpath(log_dir) + ", log dir not changed."]
@@ -1509,7 +1502,7 @@ class ConfigProviders:
                       scc_username=None, scc_password=None,
                       torrentday_username=None, torrentday_password=None, torrentday_freeleech=None,
                       hdbits_username=None, hdbits_passkey=None,
-					  nextgen_username=None, nextgen_password=None,
+                      nextgen_username=None, nextgen_password=None,
                       newzbin_username=None, newzbin_password=None,
                       provider_order=None):
 
@@ -1638,7 +1631,7 @@ class ConfigProviders:
             elif curProvider == 'hdbits':
                 sickbeard.HDBITS = curEnabled
             elif curProvider == 'nextgen':
-                sickbeard.NEXTGEN = curEnabled				
+                sickbeard.NEXTGEN = curEnabled              
             elif curProvider in newznabProviderDict:
                 newznabProviderDict[curProvider].enabled = bool(curEnabled)
             elif curProvider in torrentRssProviderDict:
@@ -1715,7 +1708,7 @@ class ConfigProviders:
 
         sickbeard.NEXTGEN_USERNAME = nextgen_username.strip()
         sickbeard.NEXTGEN_PASSWORD = nextgen_password.strip()
-		
+        
         sickbeard.NEWZNAB_DATA = '!!!'.join([x.configStr() for x in sickbeard.newznabProviderList])
         sickbeard.PROVIDER_ORDER = provider_list
 
@@ -1759,6 +1752,7 @@ class ConfigNotifications:
                           pytivo_host=None, pytivo_share_name=None, pytivo_tivo_name=None,
                           use_nma=None, nma_notify_onsnatch=None, nma_notify_ondownload=None, nma_notify_onsubtitledownload=None, nma_api=None, nma_priority=0,
                           use_pushalot=None, pushalot_notify_onsnatch=None, pushalot_notify_ondownload=None, pushalot_notify_onsubtitledownload=None, pushalot_authorizationtoken=None,
+                          use_pushbullet=None, pushbullet_notify_onsnatch=None, pushbullet_notify_ondownload=None, pushbullet_notify_onsubtitledownload=None, pushbullet_api=None, pushbullet_device=None, pushbullet_device_list=None,
                           use_email=None, email_notify_onsnatch=None, email_notify_ondownload=None, email_notify_onsubtitledownload=None, email_host=None, email_port=25, email_from=None,
                           email_tls=None, email_user=None, email_password=None, email_list=None, email_show_list=None, email_show=None ):
 
@@ -2074,6 +2068,26 @@ class ConfigNotifications:
         else:
             pushalot_notify_onsubtitledownload = 0
 
+        if use_pushbullet == "on":
+            use_pushbullet = 1
+        else:
+            use_pushbullet = 0
+
+        if pushbullet_notify_onsnatch == "on":
+            pushbullet_notify_onsnatch = 1
+        else:
+            pushbullet_notify_onsnatch = 0
+
+        if pushbullet_notify_ondownload == "on":
+            pushbullet_notify_ondownload = 1
+        else:
+            pushbullet_notify_ondownload = 0
+
+        if pushbullet_notify_onsubtitledownload == "on":
+            pushbullet_notify_onsubtitledownload = 1
+        else:
+            pushbullet_notify_onsubtitledownload = 0
+
         sickbeard.USE_XBMC = use_xbmc
         sickbeard.XBMC_NOTIFY_ONSNATCH = xbmc_notify_onsnatch
         sickbeard.XBMC_NOTIFY_ONDOWNLOAD = xbmc_notify_ondownload
@@ -2195,6 +2209,13 @@ class ConfigNotifications:
         sickbeard.PUSHALOT_NOTIFY_ONDOWNLOAD = pushalot_notify_ondownload
         sickbeard.PUSHALOT_NOTIFY_ONSUBTITLEDOWNLOAD = pushalot_notify_onsubtitledownload
         sickbeard.PUSHALOT_AUTHORIZATIONTOKEN = pushalot_authorizationtoken
+
+        sickbeard.USE_PUSHBULLET = use_pushbullet
+        sickbeard.PUSHBULLET_NOTIFY_ONSNATCH = pushbullet_notify_onsnatch
+        sickbeard.PUSHBULLET_NOTIFY_ONDOWNLOAD = pushbullet_notify_ondownload
+        sickbeard.PUSHBULLET_NOTIFY_ONSUBTITLEDOWNLOAD = pushbullet_notify_onsubtitledownload
+        sickbeard.PUSHBULLET_API = pushbullet_api
+        sickbeard.PUSHBULLET_DEVICE = pushbullet_device_list
 
         sickbeard.save_config()
 
@@ -3073,6 +3094,27 @@ class Home:
             return "Error sending Pushalot notification"
 
     @cherrypy.expose
+    def testPushbullet(self, api=None):
+        cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
+
+        result = notifiers.pushbullet_notifier.test_notify(api)
+        if result:
+            return "Pushbullet notification succeeded. Check your device to make sure it worked"
+        else:
+            return "Error sending Pushbullet notification"
+
+
+    @cherrypy.expose
+    def getPushbulletDevices(self, api=None):
+        cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
+
+        result = notifiers.pushbullet_notifier.get_devices(api)
+        if result:
+            return result
+        else:
+            return "Error sending Pushbullet notification"
+
+    @cherrypy.expose
     def shutdown(self, pid=None):
 
         if str(pid) != str(sickbeard.PID):
@@ -3916,6 +3958,10 @@ class WebInterface:
     @cherrypy.expose
     def comingEpisodes(self, layout="None"):
 
+        # get local timezone and load network timezones
+        sb_timezone = tz.tzlocal()
+        network_dict = network_timezones.load_network_dict()
+
         myDB = db.DBConnection()
 
         today1 = datetime.date.today()
@@ -3946,9 +3992,37 @@ class WebInterface:
         # make a dict out of the sql results
         sql_results = [dict(row) for row in sql_results]
 
+        # regex to parse time (12/24 hour format)
+        time_regex = re.compile(r"(\d{1,2}):(\d{2,2})( [PA]M)?\b", flags=re.IGNORECASE)
+
         # add localtime to the dict
         for index, item in enumerate(sql_results):
-            sql_results[index]['localtime'] = network_timezones.parse_date_time(item['airdate'],item['airs'],item['network'])
+            mo = time_regex.search(item['airs'])
+            if mo != None and len(mo.groups()) >= 2:
+                try:
+                    hr = helpers.tryInt(mo.group(1))
+                    m = helpers.tryInt(mo.group(2))
+                    ap = mo.group(3)
+                    # convert am/pm to 24 hour clock
+                    if ap != None:
+                        if ap.lower() == u" pm" and hr != 12:
+                            hr += 12
+                        elif ap.lower() == u" am" and hr == 12:
+                            hr -= 12
+                except:
+                    hr = 0
+                    m = 0
+            else:
+                hr = 0
+                m = 0
+            if hr < 0 or hr > 23 or m < 0 or m > 59:
+                hr = 0
+                m = 0
+
+            te = datetime.datetime.fromordinal(helpers.tryInt(item['airdate']))
+            foreign_timezone = network_timezones.get_network_timezone(item['network'], network_dict, sb_timezone)
+            foreign_naive = datetime.datetime(te.year, te.month, te.day, hr, m,tzinfo=foreign_timezone)
+            sql_results[index]['localtime'] = foreign_naive.astimezone(sb_timezone)
 
             #Normalize/Format the Airing Time
             try:
@@ -3978,8 +4052,8 @@ class WebInterface:
             paused_item,
         ]
 
-        t.next_week = datetime.datetime.combine(next_week1, datetime.time(tzinfo=network_timezones.sb_timezone))
-        t.today = datetime.datetime.now().replace(tzinfo=network_timezones.sb_timezone)
+        t.next_week = datetime.datetime.combine(next_week1, datetime.time(tzinfo=sb_timezone))
+        t.today = datetime.datetime.now().replace(tzinfo=sb_timezone)
         t.sql_results = sql_results
 
         # Allow local overriding of layout parameter
@@ -4089,3 +4163,4 @@ class WebInterface:
     errorlogs = ErrorLogs()
 
     ui = UI()
+    
