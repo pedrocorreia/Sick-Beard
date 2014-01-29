@@ -3089,15 +3089,15 @@ class Home:
 
         result = notifiers.pushalot_notifier.test_notify(authorizationToken)
         if result:
-            return "Pushalot notification succeeded. Check your Pushalot clients to make sure it worked"
+            return "Pushalot notification succeeded. Check your Pushalot clients to make sure it worked."
         else:
             return "Error sending Pushalot notification"
 
     @cherrypy.expose
-    def testPushbullet(self, api=None):
+    def testPushbullet(self, api=None, device=None):
         cherrypy.response.headers['Cache-Control'] = "max-age=0,no-cache,no-store"
 
-        result = notifiers.pushbullet_notifier.test_notify(api)
+        result = notifiers.pushbullet_notifier.test_notify(api,device)
         if result:
             return "Pushbullet notification succeeded. Check your device to make sure it worked"
         else:
